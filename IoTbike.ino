@@ -4,10 +4,14 @@
   http://www.etechpath.com/mini-gps-display-using-ublox-neo-6m-module-and-esp8266-nodemcu/
 */
 
-#include <U8g2lib.h>
 #include <Wire.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include <SoftwareSerial.h>
+
+#include "src/U8g2/U8g2lib.h"
+#include "src/OneWire/OneWire.h"
+#include "src/DallasTemperature/DallasTemperature.h"
+#include "src/TinyGPSPlus/TinyGPS++.h"
+#include "src/MQ135/MQ135.h"
 
 //Definitions
 #define pinoMQ135 A0 //Analog input 0 of your arduino
@@ -43,13 +47,11 @@ static const unsigned char u8g2_logo_wave[] U8X8_PROGMEM = {
 };
 
 // The serial connection to the GPS device
-#include <SoftwareSerial.h>
 static const int RXPin = D4, TXPin = D3;
 static const uint32_t GPSBaud = 9600;
 SoftwareSerial ss(RXPin, TXPin);
 
 //GPS Library
-#include <TinyGPS++.h>
 TinyGPSPlus gps;
 
 //Program variables
@@ -66,7 +68,6 @@ int qualidade_ar;
 unsigned long previousMillis = 0;
 const long interval = 5000; //Intervalo para leitura temp e ar
 
-#include "MQ135.h"
 MQ135 mq135_sensor = MQ135(pinoMQ135);
 
 void setup() {
@@ -323,7 +324,7 @@ void Get_GPS() {
 
   Serial.print(F(" Velocidade="));
   Serial.print(gps.speed.kmph());
-  Serial.print(F("km/h="));
+  Serial.print(F("km/h"));
 
   Serial.print(F(" Altitude="));
   Serial.print(gps.altitude.meters());
