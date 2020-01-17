@@ -62,31 +62,35 @@ const long interval = 5000; //Intervalo para leitura temp e ar
 MQ135 mq135_sensor = MQ135(pinoMQ135);
 
 void setup() {
-  Serial.begin(115200);
-  Serial.printf("\n\n**************************\n");
-  Serial.printf("IoT Bike by Estúdio Hacker\n");
-  delay(500);
+  // Mantemos o LED interno acesso para indicar que estamos no setup().
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   
-  Serial.printf("Iniciando GPS...\n");
+  Serial.begin(74880);
+  Serial.println();
+  Serial.println();
+  Serial.println(F("**************************"));
+  Serial.println(F("IoT Bike by Estúdio Hacker"));
+  
+  Serial.println(F("Iniciando GPS..."));
   ss.begin(GPSBaud);
-  delay(500);
 
-  Serial.printf("Iniciando Display...\n");
+  Serial.println(F("Iniciando Display..."));
+  // Ajustando os pinos de alimentação do display
   // OLED GND
   pinMode(D8, OUTPUT);
   digitalWrite(D8, LOW);
-
   // OLED VCC
   pinMode(D7, OUTPUT);
-  digitalWrite(D7, HIGH);
+  digitalWrite(D7, HIGH);  
   
   u8g2.begin();
-  delay(500);
-
   u8g2.firstPage();
   do {
     print_page1();
   } while ( u8g2.nextPage() );
+  
+  digitalWrite(LED_BUILTIN, HIGH);
   delay(5000);
 }
 
@@ -105,48 +109,36 @@ void loop() {
       do {
         print_Clock();
       } while ( u8g2.nextPage() );
-      delay(10);
-      
       break;      
     case 1:
       u8g2.firstPage();
       do {
         print_speed();
       } while ( u8g2.nextPage() );
-      delay(10);
-      
       break;      
     case 2:
       u8g2.firstPage();
       do {
         print_location();
       } while ( u8g2.nextPage() );
-      delay(10);
-      
       break;      
     case 3:
       u8g2.firstPage();
       do {
         print_Trip();
       } while ( u8g2.nextPage() );
-      delay(10);
-      
       break;      
     case 4:
       u8g2.firstPage();
       do {
         print_temperatura();
       } while ( u8g2.nextPage() );      
-      delay(10);
-
       break;
     case 5:
       u8g2.firstPage();
       do {
         print_ar();
       } while ( u8g2.nextPage() );
-      delay(10);
-
       break;
   }
 }
@@ -157,19 +149,13 @@ void print_page1() {
   u8g2.print("BIKE IoT");
   u8g2.drawLine(0, 12, 128, 12);
 
-//  u8g2.setFont(u8g2_font_nine_by_five_nbp_tf);
-//  u8g2.setFont(u8g2_font_inb16_mf);
   u8g2.setFont(u8g2_font_crox1cb_tf);  
   u8g2.setCursor(0, 36);
   u8g2.print("Estudio Hacker");
   
   u8g2.setFont(u8g2_font_nine_by_five_nbp_tf);
   u8g2.setCursor(0, 60);
-  u8g2.print("Carregando");
-  
-  u8g2.setFont(u8g2_font_glasstown_nbp_tf);
-  u8g2.setCursor(60, 60);
-  u8g2.print(" . . . ");
+  u8g2.print("https://estudiohacker.io");
 }
 
 void print_Clock() {
@@ -341,7 +327,7 @@ void Get_GPS() {
   smartDelay(1000);
 
   if (millis() > 5000 && gps.charsProcessed() < 10) {
-    Serial.println(F("No GPS detected: check wiring."));
+    Serial.println(F("GPS: não detectado. Verifique a conexão dos fios."));
   }
 }
 
