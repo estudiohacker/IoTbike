@@ -12,6 +12,7 @@
 #include "src/DallasTemperature/DallasTemperature.h"
 #include "src/TinyGPSPlus/TinyGPS++.h"
 #include "src/MQ135/MQ135.h"
+#include "src/Time/TimeLib.h"
 
 //Definitions
 #define pinoMQ135 A0 //Analog input 0 of your arduino
@@ -49,7 +50,6 @@ TinyGPSPlus gps;
 double Lat;
 double Long;
 double Alt;
-int day, month, year;
 int num_sat, gps_speed;
 String heading;
 
@@ -171,12 +171,11 @@ void print_Clock() {
 
   u8g2.setFont(u8g2_font_t0_22b_tn);
   u8g2.setCursor(20, 42);
-  printTime(gps.time);
-  // u8g.print(gps.date);
-  //Get_Date();
+  printTime();
+
   u8g2.setFont(u8g2_font_nine_by_five_nbp_tf);
   u8g2.setCursor(0, 64);
-  printDate(gps.date);
+  printDate();
 }
 
 void print_speed() {
@@ -273,55 +272,59 @@ static void smartDelay(unsigned long ms) {
   } while (millis() - start < ms);
 }
 
+String getISOTime() {
+  static char isoTime[20];
+  time_t t = now();
+  sprintf(isoTime, "%04d-%02d-%02dT%02d:%02d:%02d", year(t), month(t), day(t), hour(t), minute(t), second(t));
+  return String(isoTime);
+}
+
 void Get_GPS() {
   num_sat = gps.satellites.value();
-  if (gps.location.isValid() == 1) {
-    if ((Home_LAT == 0.0) && (Home_LNG == 0.0)) {
-      Home_LAT = gps.location.lat();
-      Home_LNG = gps.location.lng();
-      Serial.printf("GPS: HOME=%3.06f,%3.06f\n", Home_LAT, Home_LNG);
+  
+  Serial.print(F("GPS:"));
+  
+  Serial.print(F(" Satélites="));
+  Serial.print(gps.satellites.value());
+
+  if (gps.time.isValid() && gps.date.isValid()) {
+    if ((timeStatus() == timeNotSet) || (timeStatus() == timeNeedsSync)) {
+      setTime(gps.time.hour(), gps.time.minute(), gps.time.second(), gps.date.day(), gps.date.month(), gps.date.year());    
+      adjustTime(-3 * SECS_PER_HOUR);
     }
+    Serial.print(F(" Data/Hora="));
+    Serial.print(getISOTime().c_str());
+  }
+
+  if (gps.location.isValid()) {    
+    Serial.print(F(" Lat="));
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(F(" Long="));
+    Serial.print(gps.location.lng(), 6);
     
+    Serial.print(F(" Altitude="));
+    Serial.print(gps.altitude.meters());
+    Serial.print(F("m"));
+    
+    Serial.print(F(" Velocidade="));
+    Serial.print(gps.speed.kmph());
+    Serial.print(F("km/h"));
+
+  
     Lat = gps.location.lat();
     Long = gps.location.lng();
     Alt = gps.altitude.meters();
     
     gps_speed = gps.speed.kmph();
     
-    heading = gps.cardinal(gps.course.value());
+    heading = gps.cardinal(gps.course.value());    
+
+    if ((Home_LAT == 0.0) && (Home_LNG == 0.0)) {
+      Home_LAT = gps.location.lat();
+      Home_LNG = gps.location.lng();
+      Serial.printf("GPS: HOME=%3.06f,%3.06f\n", Home_LAT, Home_LNG);
+    }
   }
-
-  Serial.print(F("GPS: "));
-  Serial.print(F("Lat="));
-  Serial.print(gps.location.lat(), 6);
-  Serial.print(F(" Long="));
-  Serial.print(gps.location.lng(), 6);
-
-  Serial.print(F(" Dia="));
-  Serial.print(gps.date.year());
-  Serial.print(F("/"));
-  Serial.print(gps.date.month());
-  Serial.print(F("/"));
-  Serial.print(gps.date.day());
-
-  Serial.print(F(" Hora="));
-  Serial.print(gps.time.hour());
-  Serial.print(F(":"));
-  Serial.print(gps.time.minute());
-  Serial.print(F(":"));
-  Serial.print(gps.time.second());
-
-  Serial.print(F(" Velocidade="));
-  Serial.print(gps.speed.kmph());
-  Serial.print(F("km/h"));
-
-  Serial.print(F(" Altitude="));
-  Serial.print(gps.altitude.meters());
-  Serial.print(F("m"));
-  
-  Serial.print(F(" Satélites="));
-  Serial.print(gps.satellites.value());
-
   Serial.println();
 
   smartDelay(1000);
@@ -365,23 +368,23 @@ void readTemperaturaAr() {
   }  
 }
 
-static void printDate(TinyGPSDate &d) {
-  if (!d.isValid()) {
+static void printDate() {
+  if (!gps.date.isValid()) {
     u8g2.print(F("******** "));
   }
   else {
     char sz[32];
-    sprintf(sz, "%02d/%02d/%02d ", d.day(), d.month(), d.year());
+    sprintf(sz, "%02d/%02d/%04d ", day(), month(), year());
     u8g2.print(sz);
   }
 }
-static void printTime(TinyGPSTime &t) {
-  if (!t.isValid()) {
+static void printTime() {
+  if (!gps.time.isValid()) {
     u8g2.print(F("******** "));
   }
   else {
     char sz[32];
-    sprintf(sz, "%02d:%02d:%02d ", t.hour(), t.minute(), t.second());
+    sprintf(sz, "%02d:%02d:%02d ", hour(), minute(), second());
     u8g2.print(sz);
   }
 
