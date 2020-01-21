@@ -204,6 +204,8 @@ void print_Trip() {
 }
 
 void setupDisplay() {
+  Serial.println(F("Starting Display..."));
+
   // Ajustando os pinos de alimentação do display
   // OLED GND
   pinMode(D8, OUTPUT);
@@ -217,8 +219,6 @@ void setupDisplay() {
   do {
     print_page1();
   } while ( u8g2.nextPage() );
-  
-  delay(5000);
 }
 
 void loopDisplay() {

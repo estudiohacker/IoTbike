@@ -8,11 +8,12 @@ OneWire oneWire(SENSOR_DS18B20_PIN);
 DallasTemperature sensors(&oneWire);
 
 void setupSensorDS18B20() {
+  Serial.println(F("Starting DS18B20..."));
   sensors.begin();
   sensors.setResolution(SENSOR_DS18B20_PRECISION);
 }
 
-void loopSensorDS18B20(float *temp) {
+void loopSensorDS18B20(Conn* conn, float *temp) {
   static unsigned long lastSensorRead = 0;
 
   if (millis() - lastSensorRead > SENSOR_DS18B20_NOTIFY_INTERVAL) {
@@ -23,5 +24,7 @@ void loopSensorDS18B20(float *temp) {
     Serial.print("DS18B20: ");
     Serial.print(*temp);
     Serial.println("ºC");
+
+    conn->notify_sensor("DS18B20/temperature", *temp);    
   }
 }
