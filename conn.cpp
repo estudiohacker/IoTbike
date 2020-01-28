@@ -100,9 +100,8 @@ void Conn::notify_topic(String topic, String payload, bool retained) {
 }
 
 void Conn::notify_sensor(String sensor, float value) {
-  static char payload[10];
-  dtostrf(value, 10, 6, payload);
-
+  static char payload[15];
+  dtostrf(value, 15, 6, payload);
   this->notify_topic("sensor/" + sensor, String(payload), false);
 }
 
